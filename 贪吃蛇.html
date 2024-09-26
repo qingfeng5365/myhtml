@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>贪吃蛇游戏</title>
+  </head>
+  <body>
+    <div id="gameArea"></div>
+    <script type="text/javascript">
+      const gameArea = document.getElementById("gameArea");
+      const snake = [{ x: 200, y: 200 }];
+      let direction = { x: 20, y: 0 };
+      let food = { x: 100, y: 100 };
+      let gameOver = false;
+
+      function createDiv(className, x, y) {
+        const div = document.createElement("div");
+        div.className = className;
+        div.style.left = `${x}px`;
+        div.style.top = `${y}px`;
+        gameArea.appendChild(div);
+      }
+
+      function draw() {
+        gameArea.innerHTML = "";
+        snake.forEach((segment) => createDiv("snake", segment.x, segment.y));
+        createDiv("food", food.x, food.y);
+      }
+
+      function moveSnake() {
+        const head = {
+          x: snake[0].x + direction.x,
+          y: snake[0].y + direction.y,
+        };
+        snake.unshift(head);
+
+        // 检查是否撞到墙壁
+        if (head.x < 0 || head.x >= 1200 || head.y < 0 || head.y >= 1200) {
+          gameOver = true;
+        }
+
+        // 检查是否撞到自己
+        for (let i = 1; i < snake.length; i++) {
+          if (head.x === snake[i].x && head.y === snake[i].y) {
+            gameOver = true;
+          }
+        }
+
+        if (gameOver) {
+          alert("游戏结束！");
+          return;
+        }
+
+        if (head.x === food.x && head.y === food.y) {
+          food = {
+            x: Math.floor(Math.random() * 20) * 20,
+            y: Math.floor(Math.random() * 20) * 20,
+          };
+        } else {
+          snake.pop();
+        }
+      }
+
+      function changeDirection(event) {
+        const keyPressed = event.keyCode;
+        const goingUp = direction.y === -20;
+        const goingDown = direction.y === 20;
+        const goingRight = direction.x === 20;
+        const goingLeft = direction.x === -20;
+
+        if (keyPressed === 37 && !goingRight) {
+          direction = { x: -20, y: 0 };
+        }
+        if (keyPressed === 38 && !goingDown) {
+          direction = { x: 0, y: -20 };
+        }
+        if (keyPressed === 39 && !goingLeft) {
+          direction = { x: 20, y: 0 };
+        }
+        if (keyPressed === 40 && !goingUp) {
+          direction = { x: 0, y: 20 };
+        }
+      }
+
+      function gameLoop() {
+        if (!gameOver) {
+          setTimeout(() => {
+            moveSnake();
+            draw();
+            gameLoop();
+          }, 100);
+        }
+      }
+
+      document.addEventListener("keydown", changeDirection);
+      gameLoop();
+    </script>
+    <style type="text/css">
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background-color: #f0f0f0;
+      }
+
+      #gameArea {
+        position: relative;
+        width: 1200px;
+        height: 1200px;
+        background-color: #000;
+      }
+
+      .snake {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        background-color: #0f0;
+      }
+
+      .food {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        background-color: #f00;
+      }
+    </style>
+  </body>
+</html>

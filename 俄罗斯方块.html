@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>俄罗斯方块</title>
+    <style>
+      canvas {
+        border: 1px solid black;
+        display: block;
+        margin: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="tetris" width="300" height="600"></canvas>
+    <script>
+      const canvas = document.getElementById("tetris");
+      const context = canvas.getContext("2d");
+      const ROWS = 20;
+      const COLS = 10;
+      const BLOCK_SIZE = 30;
+
+      // 创建一个空的游戏区域
+      let board = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
+
+      const shapes = [
+        [[1, 1, 1, 1]], // I
+        [
+          [1, 1, 1],
+          [0, 1, 0],
+        ], // T
+        [
+          [1, 1, 0],
+          [0, 1, 1],
+        ], // S
+        [
+          [0, 1, 1],
+          [1, 1, 0],
+        ], // Z
+        [
+          [1, 1],
+          [1, 1],
+        ], // O
+        [
+          [1, 0, 0],
+          [1, 1, 1],
+        ], // L
+        [
+          [0, 0, 1],
+          [1, 1, 1],
+        ], // J
+      ];
+
+      let currentShape;
+      let currentPosition;
+
+      function randomShape() {
+        const index = Math.floor(Math.random() * shapes.length);
+        currentShape = shapes[index];
+        currentPosition = { x: 4, y: 0 };
+      }
+
+      function draw() {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        board.forEach((row, y) => {
+          row.forEach((value, x) => {
+            if (value) {
+              context.fillStyle = "blue";
+              context.fillRect(
+                x * BLOCK_SIZE,
+                y * BLOCK_SIZE,
+                BLOCK_SIZE,
+                BLOCK_SIZE
+              );
+            }
+          });
+        });
+        drawShape();
+      }
+
+      function drawShape() {
+        currentShape.forEach((row, y) => {
+          row.forEach((value, x) => {
+            if (value) {
+              context.fillStyle = "red";
+              context.fillRect(
+                (currentPosition.x + x) * BLOCK_SIZE,
+                (currentPosition.y + y) * BLOCK_SIZE,
+                BLOCK_SIZE,
+                BLOCK_SIZE
+              );
+            }
+          });
+        });
+      }
+
+      function collision(offsetX, offsetY) {
+        for (let y = 0; y < currentShape.length; y++) {
+          for (let x = 0; x < currentShape[y].length; x++) {
+            if (currentShape[y][x]) {
+              const newX = currentPosition.x + x + offsetX;
+              const newY = currentPosition.y + y + offsetY;
+              if (
+                newX < 0 ||
+                newX >= COLS ||
+                newY >= ROWS ||
+                (newY >= 0 && board[newY][newX])
+              ) {
+                return true;
+              }
+            }
+          }
+        }
+        return false;
+      }
+
+      function merge() {
+        currentShape.forEach((row, y) => {
+          row.forEach((value, x) => {
+            if (value && currentPosition.y + y >= 0) {
+              board[currentPosition.y + y][currentPosition.x + x] = 1;
+            }
+          });
+        });
+      }
+
+      function removeLines() {
+        board = board.reduce((acc, row) => {
+          if (row.every((value) => value)) {
+            acc.unshift(Array(COLS).fill(0)); // 添加新行
+          } else {
+            acc.push(row);
+          }
+          return acc;
+        }, []);
+      }
+
+      function moveDown() {
+        if (!collision(0, 1)) {
+          currentPosition.y++;
+        } else {
+          merge();
+          removeLines();
+          randomShape();
+        }
+      }
+
+      function rotate() {
+        const rotatedShape = currentShape[0].map((_, index) =>
+          currentShape.map((row) => row[index]).reverse()
+        );
+        if (!collision(0, 0)) {
+          currentShape = rotatedShape;
+        }
+      }
+
+      function moveLeft() {
+        if (!collision(-1, 0)) {
+          currentPosition.x--;
+        }
+      }
+
+      function moveRight() {
+        if (!collision(1, 0)) {
+          currentPosition.x++;
+        }
+      }
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "ArrowLeft") moveLeft();
+        else if (event.key === "ArrowRight") moveRight();
+        else if (event.key === "ArrowDown") moveDown();
+        else if (event.key === "ArrowUp") rotate();
+        draw();
+      });
+
+      function gameLoop() {
+        moveDown();
+        draw();
+        setTimeout(gameLoop, 1000);
+      }
+
+      randomShape();
+      gameLoop();
+    </script>
+  </body>
+</html>
